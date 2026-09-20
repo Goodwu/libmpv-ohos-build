@@ -6,6 +6,7 @@ ROOT=$(cd "$(dirname "$0")" && pwd)
 cd "$ROOT"
 
 ./scripts/check-ohos-hdr-contract.sh
+python3 ./scripts/verify_source_lock.py
 
 while IFS= read -r dep_path; do
   dep=${dep_path##*/}
