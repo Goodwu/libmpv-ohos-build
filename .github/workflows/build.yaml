@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt install -y gperf git jq meson ninja-build pkg-config unzip zip
+          sudo apt install -y gperf git jq meson ninja-build pkg-config ripgrep unzip zip
       - name: Set up HarmonyOS SDK
         uses: ErBWs/setup-ohos@5c8e74d05fc9888a387b6154ba06d0cd9ede3da1
         with:
