@@ -1,0 +1,11 @@
+diff --git a/video/out/vulkan/context.c b/video/out/vulkan/context.c
+--- a/video/out/vulkan/context.c
++++ b/video/out/vulkan/context.c
+@@ -20,6 +20,7 @@
+ 
+ #if HAVE_OHOS
+ #include <vulkan/vulkan_ohos.h>
++#include <vulkan/vk_ohos_native_buffer.h>
+ #endif
+ 
+ struct vulkan_opts {
