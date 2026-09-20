@@ -9,7 +9,7 @@ diff --git a/video/out/vulkan/context.c b/video/out/vulkan/context.c
 diff --git a/video/out/hwdec/hwdec_ohcodec_pl.c b/video/out/hwdec/hwdec_ohcodec_pl.c
 --- a/video/out/hwdec/hwdec_ohcodec_pl.c
 +++ b/video/out/hwdec/hwdec_ohcodec_pl.c
-@@ -17,12 +17,4 @@
+@@ -17,11 +17,4 @@
  #include "video/out/placebo/ra_pl.h"
 -
 -#if defined(VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS)
