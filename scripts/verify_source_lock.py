@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 from pathlib import Path
 
@@ -14,6 +15,16 @@ def main() -> None:
     failures = []
     for dependency in lock["dependencies"]:
         path = ROOT / "libmpv" / dependency["name"]
+        archive = dependency.get("archive")
+        if archive:
+            archive_path = ROOT / "libmpv" / archive
+            if not archive_path.is_file():
+                failures.append(f"{dependency['name']}: source archive missing: {archive_path}")
+                continue
+            digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+            if digest != dependency["archive_sha256"]:
+                failures.append(f"{dependency['name']}: expected archive {dependency['archive_sha256']}, got {digest}")
+            continue
         try:
             actual = subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
         except (OSError, subprocess.CalledProcessError):

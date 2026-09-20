@@ -7,18 +7,20 @@
     "api": "6.0-Release"
   },
   "dependencies": [
-    {"name":"mbedtls","url":"https://github.com/Mbed-TLS/mbedtls.git","ref":"mbedtls-3.6.4","commit":"947808ba53faf09c526f575f5635e2e86472ba5d","license":"Apache-2.0"},
+    {"name":"mbedtls","url":"https://github.com/Mbed-TLS/mbedtls.git","ref":"mbedtls-3.6.4","commit":"947808ba53faf09c526f575f5635e2e86472ba5d","archive":"mbedtls.tar.bz2","archive_sha256":"ec35b18a6c593cf98c3e30db8b98ff93e8940a8c4e690e66b41dfc011d678110","license":"Apache-2.0"},
     {"name":"dav1d","url":"https://code.videolan.org/videolan/dav1d.git","ref":"1.5.1","commit":"42b2b24fb8819f1ed3643aa9cf2a62f03868e3aa","license":"BSD-2-Clause"},
     {"name":"libxml2","url":"https://gitlab.gnome.org/GNOME/libxml2.git","ref":"v2.15.1","commit":"b7fa62cbe8ef0df5869e000d5b690bdedd07f33e","license":"MIT"},
     {"name":"fribidi","url":"https://github.com/fribidi/fribidi.git","ref":"v1.0.16","commit":"68162babff4f39c4e2dc164a5e825af93bda9983","license":"LGPL-2.1-or-later"},
     {"name":"freetype","url":"https://gitlab.freedesktop.org/freetype/freetype.git","ref":"VER-2-13-3","commit":"42608f77f20749dd6ddc9e0536788eaad70ea4b5","license":"FTL"},
     {"name":"harfbuzz","url":"https://github.com/harfbuzz/harfbuzz.git","ref":"11.4.5","commit":"22f77d48abc35c1e053d02f1ada0d8f1ce1b8423","license":"MIT"},
     {"name":"fontconfig","url":"https://gitlab.freedesktop.org/fontconfig/fontconfig.git","ref":"2.17.1","commit":"6d0a98982ec351c165c9224c8b7dbdfca3010e47","license":"MIT"},
+    {"name":"dovi_tools","url":"https://github.com/quietvoid/dovi_tool.git","ref":"2.3.1","commit":"b25558062e4a56973482ec70133bd7b891320e48","license":"MIT"},
     {"name":"lcms","url":"https://github.com/mm2/Little-CMS.git","ref":"lcms2.17","commit":"5176347635785e53ee5cee92328f76fda766ecc6","license":"MIT"},
     {"name":"shaderc","url":"https://github.com/google/shaderc.git","ref":"v2025.4","commit":"73743588fe9c39f2f1c780a087d94afac691a189","license":"Apache-2.0"},
     {"name":"ffmpeg","url":"https://code.ffmpeg.org/ErBWs/FFmpeg.git","ref":"feat-ohos-n8.0","commit":"7dddf74de0346fee1f17bd49563efc5ab9deaf98","license":"LGPL-2.1-or-later"},
     {"name":"libass","url":"https://github.com/libass/libass.git","ref":"0.17.4","commit":"bbb3c7f1570a4a021e52683f3fbdf74fe492ae84","license":"ISC"},
     {"name":"libplacebo","url":"https://code.videolan.org/videolan/libplacebo.git","ref":"v7.360.1","commit":"cee9b076f2c63104ccfd497fa79c39a867293ec4","license":"LGPL-2.1-or-later"},
+    {"name":"lua","url":"https://www.lua.org/ftp/lua-5.2.4.tar.gz","ref":"5.2.4","commit":"archive-only","archive":"lua.tar.gz","archive_sha256":"b9e2e4aad6789b3b63a056d442f7b39f0ecfca3ae0f1fc0ae4e9614401b69f4b","license":"MIT"},
     {"name":"mpv","url":"https://github.com/ErBWs/mpv.git","ref":"feat-ohos-0.41.0","commit":"6edeee00a07b9b76f197aa71eee3d029fb090de4","license":"GPL-2.0-or-later"}
   ]
 }

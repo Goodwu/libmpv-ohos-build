@@ -14,7 +14,6 @@ if [ ! -d mbedtls ]; then
 	mkdir mbedtls
 	wget -qO mbedtls.tar.bz2 https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-$V_MBEDTLS/mbedtls-$V_MBEDTLS.tar.bz2
   tar -C mbedtls --strip-components=1 -jxf mbedtls.tar.bz2
-  rm mbedtls.tar.bz2
 else
   echo "mbedtls already exists, skipping."
 fi
@@ -67,20 +66,20 @@ else
   echo "fontconfig already exists, skipping."
 fi
 
-# dovi_tools
-if [ ! -d dovi_tools ]; then
-  echo "Downloading dovi_tools..."
-  git -c advice.detachedHead=false clone -q --depth 1 -b $V_DOVI_TOOLS https://github.com/quietvoid/dovi_tool.git dovi_tools > /dev/null
-else
-  echo "dovi_tools already exists, skipping."
-fi
-
 # lcms
 if [ ! -d lcms ]; then
   echo "Downloading lcms..."
   git -c advice.detachedHead=false clone -q --depth 1 -b $V_LCMS https://github.com/mm2/Little-CMS.git lcms > /dev/null
 else
   echo "lcms already exists, skipping."
+fi
+
+# dovi_tools
+if [ ! -d dovi_tools ]; then
+  echo "Downloading dovi_tools..."
+  git -c advice.detachedHead=false clone -q --depth 1 -b $V_DOVI_TOOLS https://github.com/quietvoid/dovi_tool.git dovi_tools > /dev/null
+else
+  echo "dovi_tools already exists, skipping."
 fi
 
 # shaderc
@@ -124,7 +123,6 @@ if [ ! -d lua ]; then
   mkdir lua
   wget -qO lua.tar.gz https://www.lua.org/ftp/lua-$V_LUA.tar.gz
   tar -C lua --strip-components=1 -zxf lua.tar.gz
-  rm lua.tar.gz
 else
   echo "lua already exists, skipping."
 fi
