@@ -1,11 +1,25 @@
 diff --git a/video/out/vulkan/context.c b/video/out/vulkan/context.c
 --- a/video/out/vulkan/context.c
 +++ b/video/out/vulkan/context.c
-@@ -20,6 +20,7 @@
- 
+@@ -22,4 +22,5 @@
  #if HAVE_OHOS
  #include <vulkan/vulkan_ohos.h>
 +#include <vulkan/vk_ohos_native_buffer.h>
  #endif
- 
- struct vulkan_opts {
+diff --git a/video/out/hwdec/hwdec_ohcodec_pl.c b/video/out/hwdec/hwdec_ohcodec_pl.c
+--- a/video/out/hwdec/hwdec_ohcodec_pl.c
++++ b/video/out/hwdec/hwdec_ohcodec_pl.c
+@@ -19,13 +19,8 @@
+ #include "video/out/placebo/ra_pl.h"
+-
+-#if defined(VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS)
+-#define OH_NATIVE_BUFFER_HANDLE_TYPE \
+-    VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS
+-#else
+-#define OH_NATIVE_BUFFER_HANDLE_TYPE \
+-    VK_EXTERNAL_MEMORY_HANDLE_TYPE_OHOS_NATIVE_BUFFER_BIT_OHOS
+-#endif
+-
++#define OH_NATIVE_BUFFER_HANDLE_TYPE \
++    VK_EXTERNAL_MEMORY_HANDLE_TYPE_OH_NATIVE_BUFFER_BIT_OHOS
+ #define MAX_CACHED_IMPORTS 16
