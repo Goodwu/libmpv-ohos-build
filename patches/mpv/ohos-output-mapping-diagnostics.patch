@@ -1,0 +1,39 @@
+diff --git a/video/out/vo_gpu_next.c b/video/out/vo_gpu_next.c
+index cfa74c7..6273bd2 100644
+--- a/video/out/vo_gpu_next.c
++++ b/video/out/vo_gpu_next.c
+@@ -972,6 +972,12 @@ static void set_colorspace_hint(struct priv *p, struct pl_color_space *hint)
+         sw->fns->set_color(sw, &params);
+         if (hint)
+             *hint = params.color;
++#if HAVE_OHOS
++        MP_WARN(p, "OHOS color hint after set_color: has_hint=%d prim=%d trc=%d levels=%d max_luma=%.3f max_cll=%.3f max_fall=%.3f\n",
++                !!hint, params.color.primaries, params.color.transfer,
++                params.repr.levels, params.color.hdr.max_luma,
++                params.color.hdr.max_cll, params.color.hdr.max_fall);
++#endif
+     } else {
+         pl_swapchain_colorspace_hint(p->sw, hint);
+     }
+@@ -1291,10 +1297,21 @@ static bool draw_frame(struct vo *vo, struct vo_frame *frame)
+     // Calculate target
+     struct pl_frame target;
+     pl_frame_from_swapchain(&target, &swframe);
++#if HAVE_OHOS
++    struct pl_color_space swap_color = target.color;
++#endif
+     if (target_hint && sw->fns->set_color)
+         target.color = hint;
+     bool strict_sw_params = target_hint && !pass_colorspace && p->next_opts->target_hint_strict;
+     apply_target_options(p, &target, hint.hdr.min_luma, strict_sw_params);
++#if HAVE_OHOS
++    MP_WARN(p, "OHOS target mapping: swap_prim=%d swap_trc=%d target_prim=%d target_trc=%d levels=%d max_luma=%.3f max_cll=%.3f max_fall=%.3f strict=%d\n",
++            swap_color.primaries, swap_color.transfer,
++            target.color.primaries, target.color.transfer,
++            target.repr.levels, target.color.hdr.max_luma,
++            target.color.hdr.max_cll, target.color.hdr.max_fall,
++            strict_sw_params);
++#endif
+     if (target.color.transfer == PL_COLOR_TRC_SRGB && frame->current &&
+         ((opts->sdr_adjust_gamma == 0 && opts->target_trc == PL_COLOR_TRC_UNKNOWN) ||
+          opts->sdr_adjust_gamma == -1))

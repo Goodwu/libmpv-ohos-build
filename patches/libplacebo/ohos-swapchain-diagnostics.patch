@@ -1,0 +1,11 @@
+diff --git a/src/vulkan/swapchain.c b/src/vulkan/swapchain.c
+--- a/src/vulkan/swapchain.c
++++ b/src/vulkan/swapchain.c
+@@ -747,6 +747,6 @@
+     if (use_deferred_alloc)
+         sinfo.flags |= VK_SWAPCHAIN_CREATE_DEFERRED_MEMORY_ALLOCATION_BIT_KHR;
+
+-    PL_DEBUG(sw, "(Re)creating swapchain of size %dx%d",
++    PL_INFO(sw, "(Re)creating swapchain of size %dx%d",
+              sinfo.imageExtent.width,
+              sinfo.imageExtent.height);

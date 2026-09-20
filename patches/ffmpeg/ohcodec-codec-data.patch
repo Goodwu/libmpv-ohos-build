@@ -1,0 +1,60 @@
+diff --git a/libavcodec/ohdec.c b/libavcodec/ohdec.c
+index 344b934..c68e77b 100644
+--- a/libavcodec/ohdec.c
++++ b/libavcodec/ohdec.c
+@@ -91,6 +91,7 @@ typedef struct OHCodecDecContext {
+     int nb_dovi_frames;
+ 
+     int decode_status;
++    bool codec_data_sent;
+     bool eof_sent;
+     atomic_bool accepting_callbacks;
+ 
+@@ -835,6 +836,39 @@ static int oh_decode_send_pkt(AVCodecContext *avctx,
+     OH_AVErrCode err;
+     int ret;
+ 
++    /* OHCodec requires codec-specific data to be submitted as a dedicated
++     * input buffer.  AVCodec keeps it in AVCodecContext::extradata; sending
++     * only access units leaves HEVC decoders without VPS/SPS/PPS and results
++     * in "missing parameter sets" on otherwise valid streams. */
++    if (!s->codec_data_sent && avctx->extradata_size > 0) {
++        uint8_t *p = OH_AVBuffer_GetAddr(input->buffer);
++        int32_t capacity = OH_AVBuffer_GetCapacity(input->buffer);
++        if (!p || capacity < avctx->extradata_size) {
++            av_log(avctx, AV_LOG_ERROR,
++                   "OHCodec codec data does not fit: size=%d capacity=%d\n",
++                   avctx->extradata_size, capacity);
++            return AVERROR(ENOSPC);
++        }
++        memcpy(p, avctx->extradata, avctx->extradata_size);
++        OH_AVCodecBufferAttr attr = {
++            .size = avctx->extradata_size,
++            .offset = 0,
++            .pts = 0,
++            .flags = AVCODEC_BUFFER_FLAGS_CODEC_DATA,
++        };
++        err = OH_AVBuffer_SetBufferAttr(input->buffer, &attr);
++        if (err != AV_ERR_OK)
++            return ff_oh_err_to_ff_err(err);
++        err = OH_VideoDecoder_PushInputBuffer(s->dec, input->index);
++        if (err != AV_ERR_OK)
++            return ff_oh_err_to_ff_err(err);
++        s->codec_data_sent = true;
++        av_log(avctx, AV_LOG_DEBUG,
++               "OHCodec codec data submitted: size=%d flags=0x%x\n",
++               avctx->extradata_size, attr.flags);
++        return 0;
++    }
++
+     if (!s->pkt.size && !s->eof_sent) {
+         OH_AVCodecBufferAttr attr = {
+             .flags = AVCODEC_BUFFER_FLAGS_EOS,
+@@ -993,6 +1027,7 @@ static void oh_decode_flush(AVCodecContext *avctx)
+     av_fifo_reset2(s->input_queue);
+     av_fifo_reset2(s->output_queue);
+     s->decode_status = 0;
++    s->codec_data_sent = false;
+     s->eof_sent = false;
+     av_packet_unref(&s->pkt);
+     oh_decode_clear_dovi(s);

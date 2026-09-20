@@ -1,0 +1,44 @@
+diff --git a/libavcodec/ohdec.c b/libavcodec/ohdec.c
+index f745b7d..344b934 100644
+--- a/libavcodec/ohdec.c
++++ b/libavcodec/ohdec.c
+@@ -857,18 +857,36 @@ static int oh_decode_send_pkt(AVCodecContext *avctx,
+                p, n);
+         return AVERROR_EXTERNAL;
+     }
+-    n = FFMIN(s->pkt.size, n);
++    int32_t packet_size = s->pkt.size;
++    n = FFMIN(packet_size, n);
+     memcpy(p, s->pkt.data, n);
+ 
++    // OHCodec input buffers can be smaller than a single HEVC access unit,
++    // especially for 4K keyframes.  The old code pushed every fragment as a
++    // complete frame, which makes the decoder report "missing parameter
++    // sets" after the first fragment.  Preserve the access-unit boundary
++    // explicitly so the codec assembles the fragments before decoding.
++    uint32_t flags = (s->pkt.flags & AV_PKT_FLAG_KEY)
++                     ? AVCODEC_BUFFER_FLAGS_SYNC_FRAME : 0;
++    if (n < packet_size)
++        flags |= AVCODEC_BUFFER_FLAGS_INCOMPLETE_FRAME;
++
+     OH_AVCodecBufferAttr attr = {
+             .size = n,
+             .offset = 0,
+             .pts = av_rescale_q(s->pkt.pts, avctx->pkt_timebase,
+                                 AV_TIME_BASE_Q),
+-            .flags = (s->pkt.flags & AV_PKT_FLAG_KEY)
+-                     ? AVCODEC_BUFFER_FLAGS_SYNC_FRAME : 0,
++            .flags = flags,
+     };
+ 
++    if (n < packet_size) {
++        av_log(avctx, AV_LOG_DEBUG,
++               "OHCodec input access unit split: packet=%d capacity=%d "
++               "chunk=%d flags=0x%x\n",
++               packet_size, OH_AVBuffer_GetCapacity(input->buffer), n,
++               attr.flags);
++    }
++
+     err = OH_AVBuffer_SetBufferAttr(input->buffer, &attr);
+     if (err != AV_ERR_OK) {
+         ret = ff_oh_err_to_ff_err(err);

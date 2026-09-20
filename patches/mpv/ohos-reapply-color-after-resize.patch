@@ -1,0 +1,41 @@
+diff --git a/video/out/ohos_common.h b/video/out/ohos_common.h
+--- a/video/out/ohos_common.h
++++ b/video/out/ohos_common.h
+@@ -32,3 +32,4 @@ bool vo_ohos_surface_size(struct vo *vo, int *w, int *h);
+ struct pl_color_space vo_ohos_preferred_csp(struct vo *vo);
+ bool vo_ohos_set_color(struct vo *vo, struct mp_image_params *params);
+ void vo_ohos_invalidate_color(struct vo *vo);
++void vo_ohos_reapply_color(struct vo *vo);
+diff --git a/video/out/ohos_common.c b/video/out/ohos_common.c
+--- a/video/out/ohos_common.c
++++ b/video/out/ohos_common.c
+@@ -334,4 +334,10 @@ void vo_ohos_invalidate_color(struct vo *vo)
+     ctx->static_metadata_valid = false;
+     ctx->hdr_white_point_valid = false;
+     ctx->sdr_white_point_valid = false;
+ }
++
++void vo_ohos_reapply_color(struct vo *vo)
++{
++    struct mp_image_params params = vo_get_current_params(vo);
++    vo_ohos_set_color(vo, &params);
++}
+diff --git a/video/out/opengl/context_ohos.c b/video/out/opengl/context_ohos.c
+--- a/video/out/opengl/context_ohos.c
++++ b/video/out/opengl/context_ohos.c
+@@ -120,5 +120,6 @@ static bool ohos_reconfig(struct ra_ctx *ctx)
+     ctx->vo->dheight = h;
+     ra_gl_ctx_resize(ctx->swapchain, w, h, 0);
+     vo_ohos_invalidate_color(ctx->vo);
++    vo_ohos_reapply_color(ctx->vo);
+     return true;
+ }
+diff --git a/video/out/vulkan/context_ohos.c b/video/out/vulkan/context_ohos.c
+--- a/video/out/vulkan/context_ohos.c
++++ b/video/out/vulkan/context_ohos.c
+@@ -92,4 +92,5 @@ static bool ohos_reconfig(struct ra_ctx *ctx)
+     MP_WARN(ctx, "OHOS resize begin: %dx%d\n", w, h);
+     bool ok = ra_vk_ctx_resize(ctx, w, h);
+     vo_ohos_invalidate_color(ctx->vo);
++    vo_ohos_reapply_color(ctx->vo);
+     MP_WARN(ctx, "OHOS resize end: %dx%d ok=%d color-cache-invalidated\n",
