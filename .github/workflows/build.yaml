@@ -71,4 +71,3 @@ jobs:
             - Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           files: |
             ./libmpv/arm64-build/*.zip
-            ./libmpv/arm64-build/SHA256SUMS
