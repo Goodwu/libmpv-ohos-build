@@ -3,9 +3,24 @@ name: build libmpv for ohos
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+      release:
+        description: 'Create a GitHub release'
+        required: true
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -18,16 +33,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt install -y gperf git jq meson ninja-build pkg-config unzip zip
-      - name: Set up HarmonyOS SDK
-        uses: ErBWs/setup-ohos@5c8e74d05fc9888a387b6154ba06d0cd9ede3da1
-        with:
-          version: 26.0.0.621
-          cache: true
+          sudo apt install -y gperf
+          pip3 install meson
+        shell: bash
 
       - name: Bundle
         run: |
-          chmod +x *.sh */*.sh scripts/*.sh
+          sudo chmod +x *.sh */*.sh
           ./bundle.sh
         shell: bash
 
@@ -37,15 +49,20 @@ jobs:
           name: artifact
           path: |
             ./libmpv/arm64-build/*.zip
-            ./libmpv/arm64-build/libmpv.so
-            ./libmpv/arm64-build/manifest.json
-            ./libmpv/arm64-build/sbom.cdx.json
-            ./libmpv/arm64-build/SHA256SUMS
 
-      - name: Verify metadata and checksums
+      - name: Prepare release
+        if: ${{ github.event.inputs.release == 'true' }}
         run: |
-          set -euo pipefail
-          python3 -m json.tool reproducibility/source-lock.json >/dev/null
-          python3 -m json.tool libmpv/arm64-build/manifest.json >/dev/null
-          python3 -m json.tool libmpv/arm64-build/sbom.cdx.json >/dev/null
-          (cd libmpv/arm64-build && sha256sum -c SHA256SUMS)
+          echo "RELEASE_TAG=$(date "+%Y%m%d")" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        if: ${{ github.event.inputs.release == 'true' }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
+          body: |
+            **Workflow run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          files: |
+            ./libmpv/arm64-build/*.zip

@@ -23,6 +23,7 @@ cd .build
 meson setup .. \
   --cross-file $ROOT_DIR/libmpv/arm64-crossfile.ini \
   --prefix=$DEST \
+  -Ddovi=enabled \
   -Dlcms=enabled \
   -Dshaderc=enabled \
   -Dvulkan=enabled \
