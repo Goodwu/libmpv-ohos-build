@@ -2,10 +2,13 @@ name: build libmpv for ohos
 
 on:
   pull_request:
+  push:
+    tags:
+      - '20[0-9][0-9][0-9][0-9][0-9][0-9]'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -35,6 +38,14 @@ jobs:
           ./bundle.sh
         shell: bash
 
+      - name: Verify metadata and checksums
+        run: |
+          set -euo pipefail
+          python3 -m json.tool reproducibility/source-lock.json >/dev/null
+          python3 -m json.tool libmpv/arm64-build/manifest.json >/dev/null
+          python3 -m json.tool libmpv/arm64-build/sbom.cdx.json >/dev/null
+          (cd libmpv/arm64-build && sha256sum -c SHA256SUMS)
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -46,10 +57,21 @@ jobs:
             ./libmpv/arm64-build/sbom.cdx.json
             ./libmpv/arm64-build/SHA256SUMS
 
-      - name: Verify metadata and checksums
-        run: |
-          set -euo pipefail
-          python3 -m json.tool reproducibility/source-lock.json >/dev/null
-          python3 -m json.tool libmpv/arm64-build/manifest.json >/dev/null
-          python3 -m json.tool libmpv/arm64-build/sbom.cdx.json >/dev/null
-          (cd libmpv/arm64-build && sha256sum -c SHA256SUMS)
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: libmpv-ohos ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            Reproducible OHOS ARM64 build for immutable tag `${{ github.ref_name }}`.
+
+            - Commit: `${{ github.sha }}`
+            - Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          files: |
+            ./libmpv/arm64-build/*.zip
+            ./libmpv/arm64-build/libmpv.so
+            ./libmpv/arm64-build/manifest.json
+            ./libmpv/arm64-build/sbom.cdx.json
+            ./libmpv/arm64-build/SHA256SUMS
