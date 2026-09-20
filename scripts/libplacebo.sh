@@ -36,18 +36,41 @@ ninja install
 # mpv discovers Vulkan through pkg-config in a separate Meson project. Export
 # the same headers and OHOS Vulkan loader as a normal Vulkan package so mpv can
 # resolve the dependency without relying on host Vulkan development files.
+VULKAN_HEADERS_DIR=$ROOT_DIR/libmpv/libplacebo/3rdparty/Vulkan-Headers/include
 OHOS_VULKAN_HEADERS_DIR=$OHOS_NDK_HOME/native/sysroot/usr/include/vulkan
-if [ ! -d "$OHOS_VULKAN_HEADERS_DIR" ] || \
-	[ ! -d "$OHOS_NDK_HOME/native/sysroot/usr/include/vk_video" ] || \
-	[ ! -f "$OHOS_VULKAN_HEADERS_DIR/vulkan_ohos.h" ] || \
-	[ ! -f "$OHOS_VULKAN_HEADERS_DIR/vk_ohos_native_buffer.h" ]; then
-	printf 'Vulkan headers are missing: %s\n' "$OHOS_VULKAN_HEADERS_DIR" >&2
+if [ ! -d "$VULKAN_HEADERS_DIR/vulkan" ] || \
+	[ ! -f "$OHOS_VULKAN_HEADERS_DIR/vulkan_ohos.h" ]; then
+	printf 'Vulkan headers are missing: %s\n' "$VULKAN_HEADERS_DIR" >&2
 	exit 1
 fi
 
 mkdir -p "$DEST/include" "$DEST/lib/pkgconfig"
-cp -R "$OHOS_NDK_HOME/native/sysroot/usr/include/vulkan" \
-	"$OHOS_NDK_HOME/native/sysroot/usr/include/vk_video" "$DEST/include/"
+cp -R "$VULKAN_HEADERS_DIR/vulkan" "$DEST/include/"
+cp "$OHOS_VULKAN_HEADERS_DIR/vulkan_ohos.h" "$DEST/include/vulkan/"
+mkdir -p "$DEST/include/vk_video"
+if [ -d "$VULKAN_HEADERS_DIR/vk_video" ]; then
+	cp -R "$VULKAN_HEADERS_DIR/vk_video/." "$DEST/include/vk_video/"
+fi
+
+# The SDK and the pinned libplacebo submodule predate the VP9 Vulkan video
+# headers required by FFmpeg's Vulkan hwcontext. Fetch the two missing official
+# headers at a fixed revision and verify them before use.
+VULKAN_HEADERS_COMMIT=6802bb4733b63ed5efd3adb308a6c885ef180ea1
+for header in vulkan_video_codec_vp9std.h vulkan_video_codec_vp9std_decode.h; do
+	curl -fsSL "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Headers/$VULKAN_HEADERS_COMMIT/include/vk_video/$header" \
+		-o "$DEST/include/vk_video/$header"
+done
+printf '%s  %s\n' \
+	0a47125865376a3fe7014b69ff6db9d04e30ebf8c4d15664f1d894649ad5c09d "$DEST/include/vk_video/vulkan_video_codec_vp9std.h" \
+	1ceb1a8d0e3370e508cf688a6e57dc314cd82186b60f3cef420ea4b1b483865d "$DEST/include/vk_video/vulkan_video_codec_vp9std_decode.h" \
+	| shasum -a 256 -c -
+
+cat > "$DEST/include/vulkan/vk_ohos_native_buffer.h" <<'EOF'
+#ifndef VK_OHOS_NATIVE_BUFFER_H_
+#define VK_OHOS_NATIVE_BUFFER_H_ 1
+#define VK_OHOS_NATIVE_BUFFER_EXTENSION_NAME "VK_OHOS_native_buffer"
+#endif
+EOF
 VULKAN_HEADER_VERSION=$(sed -n 's/^#define VK_HEADER_VERSION \([0-9][0-9]*\)$/\1/p' "$DEST/include/vulkan/vulkan_core.h" | head -n 1)
 VULKAN_VERSION=1.4.$VULKAN_HEADER_VERSION
 if [ -z "$VULKAN_HEADER_VERSION" ]; then
