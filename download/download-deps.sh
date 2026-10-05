@@ -96,7 +96,7 @@ fi
 # ffmpeg
 if [ ! -d ffmpeg ]; then
   echo "Downloading ffmpeg..."
-  git -c advice.detachedHead=false clone -q --depth 1 -b $V_FFMPEG https://code.ffmpeg.org/ErBWs/FFmpeg.git ffmpeg > /dev/null
+  git -c advice.detachedHead=false clone -q --depth 1 -b $V_FFMPEG https://github.com/Goodwu/FFmpeg.git ffmpeg > /dev/null
 else
   echo "ffmpeg already exists, skipping."
 fi
@@ -112,7 +112,7 @@ fi
 # libplacebo
 if [ ! -d libplacebo ]; then
   echo "Downloading libplacebo..."
-  git -c advice.detachedHead=false clone -q --depth 1 -b $V_LIBPLACEBO --recursive https://code.videolan.org/videolan/libplacebo.git libplacebo > /dev/null
+  git -c advice.detachedHead=false clone -q --depth 1 -b $V_LIBPLACEBO --recursive https://github.com/Goodwu/libplacebo.git libplacebo > /dev/null
 else
   echo "libplacebo already exists, skipping."
 fi
@@ -130,7 +130,7 @@ fi
 # mpv
 if [ ! -d mpv ]; then
   echo "Downloading mpv..."
-  git -c advice.detachedHead=false clone -q --depth 1 -b $V_MPV https://github.com/ErBWs/mpv.git mpv > /dev/null
+  git -c advice.detachedHead=false clone -q --depth 1 -b $V_MPV https://github.com/Goodwu/mpv.git mpv > /dev/null
 else
   echo "mpv already exists, skipping."
 fi
