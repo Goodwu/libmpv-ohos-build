@@ -23,3 +23,4 @@ fi
 
 ./download/download-ohos-rs.sh
 ./download/download-deps.sh
+./download/download-libwebp.sh

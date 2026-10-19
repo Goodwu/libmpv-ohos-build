@@ -33,6 +33,9 @@ def main() -> None:
     library = OUT / "libmpv.so"
     if not archive.is_file() or not library.is_file():
         raise SystemExit("native outputs are missing")
+    features = json.loads((OUT / "media-features.json").read_text(encoding="utf-8"))
+    if features["libmpv_sha256"] != sha256(library):
+        raise SystemExit("compiled feature evidence is not for this library")
     lock = json.loads(LOCK.read_text(encoding="utf-8"))
     patches = []
     for path in sorted(ROOT.glob("patches/**/*.patch")):
@@ -47,6 +50,7 @@ def main() -> None:
         "sdk": lock["sdk"],
         "dependencies": lock["dependencies"],
         "patches": patches,
+        "media_features": features,
         "artifacts": [
             {"file": archive.name, "sha256": sha256(archive), "size": archive.stat().st_size},
             {"file": library.name, "sha256": sha256(library), "size": library.stat().st_size},

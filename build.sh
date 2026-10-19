@@ -5,6 +5,7 @@ set -eu
 # ffmpeg
 ./scripts/mbedtls.sh build
 ./scripts/dav1d.sh build
+./scripts/libwebp.sh build
 ./scripts/ffmpeg.sh build
 
 # fontconfig

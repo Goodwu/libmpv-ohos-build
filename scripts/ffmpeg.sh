@@ -35,6 +35,8 @@ fi
   --extra-ldflags="-L$DEST/lib" \
   --enable-libdav1d \
   --enable-mbedtls \
+  --enable-libwebp \
+  --pkg-config-flags=--static \
   --disable-vulkan \
   \
   --disable-devices \
@@ -42,7 +44,8 @@ fi
   --disable-muxers \
   --disable-encoders \
   --enable-ohcodec \
-  --enable-encoder=png,mjpeg
+  --enable-muxer=webp \
+  --enable-encoder=png,mjpeg,libwebp,libwebp_anim
 make -j$CORES
 make install
 
