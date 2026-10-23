@@ -18,6 +18,7 @@ else
 fi
 
 cargo cinstall \
+  --locked \
   --release \
   --target=aarch64-unknown-linux-ohos \
   --library-type=staticlib \

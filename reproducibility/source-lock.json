@@ -6,9 +6,14 @@
     "cli_version": "26.0.0.621",
     "api": "6.0-Release"
   },
+  "tools": {
+    "meson": "1.6.1",
+    "rust": "1.97.0",
+    "cargo_c": "0.10.26+cargo-0.100.0"
+  },
   "dependencies": [
     {"name":"libwebp","url":"https://github.com/webmproject/libwebp.git","ref":"v1.6.0","commit":"4fa21912338357f89e4fd51cf2368325b59e9bd9","license":"BSD-3-Clause"},
-    {"name":"mbedtls","url":"https://github.com/Mbed-TLS/mbedtls.git","ref":"mbedtls-3.6.4","commit":"947808ba53faf09c526f575f5635e2e86472ba5d","archive":"mbedtls.tar.bz2","archive_sha256":"ec35b18a6c593cf98c3e30db8b98ff93e8940a8c4e690e66b41dfc011d678110","license":"Apache-2.0"},
+    {"name":"mbedtls","url":"https://github.com/Mbed-TLS/mbedtls.git","ref":"mbedtls-3.6.4","commit":"947808ba53faf09c526f575f5635e2e86472ba5d","archive":"mbedtls.tar.bz2","archive_url":"https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.4/mbedtls-3.6.4.tar.bz2","archive_sha256":"ec35b18a6c593cf98c3e30db8b98ff93e8940a8c4e690e66b41dfc011d678110","license":"Apache-2.0"},
     {"name":"dav1d","url":"https://code.videolan.org/videolan/dav1d.git","ref":"1.5.1","commit":"42b2b24fb8819f1ed3643aa9cf2a62f03868e3aa","license":"BSD-2-Clause"},
     {"name":"libxml2","url":"https://gitlab.gnome.org/GNOME/libxml2.git","ref":"v2.15.1","commit":"b7fa62cbe8ef0df5869e000d5b690bdedd07f33e","license":"MIT"},
     {"name":"fribidi","url":"https://github.com/fribidi/fribidi.git","ref":"v1.0.16","commit":"68162babff4f39c4e2dc164a5e825af93bda9983","license":"LGPL-2.1-or-later"},

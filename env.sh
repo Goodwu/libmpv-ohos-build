@@ -2,18 +2,19 @@
 
 set -eu
 
-ROOT_DIR=$(cd $(dirname "$0")/..; pwd)
+ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 if [ "$(uname -s)" = "Linux" ]; then
-  export OHOS_NDK_HOME=${OHOS_NDK_HOME:-/home/wuweiwei1/ohos-sdk/command-line-tools/sdk/default/openharmony}
-  export CORES=$(nproc)
+  : "${OHOS_NDK_HOME:?Set OHOS_NDK_HOME to the locked HarmonyOS SDK.}"
+  export CORES=${CORES:-$(nproc)}
 elif [ "$(uname -s)" = "Darwin" ]; then
-  export OHOS_NDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony
-  export CORES=$(sysctl -n hw.ncpu)
+  export OHOS_NDK_HOME=${OHOS_NDK_HOME:-/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony}
+  export CORES=${CORES:-$(sysctl -n hw.ncpu)}
 fi
 
 export DEST=$ROOT_DIR/libmpv/arm64-build
-export PATH=$OHOS_NDK_HOME/native/build-tools/cmake/bin:$PATH
+export PATH=$OHOS_NDK_HOME/native/build-tools/cmake/bin:${HOME}/.cargo/bin:$PATH
+export RUSTUP_TOOLCHAIN=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tools"]["rust"])' "$ROOT_DIR/reproducibility/source-lock.json")
 export PKG_CONFIG_PATH=$DEST/lib/pkgconfig
 export PKG_CONFIG_LIBDIR=$OHOS_NDK_HOME/native/sysroot/usr/lib
 export PKG_CONFIG_INCLUDEDIR=$OHOS_NDK_HOME/native/sysroot/usr/include

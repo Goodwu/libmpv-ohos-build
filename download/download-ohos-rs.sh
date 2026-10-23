@@ -1,19 +1,14 @@
 #!/bin/bash
 
-set -eu
+set -euo pipefail
 
 export PATH="${HOME}/.cargo/bin:${HOME}/.local/bin:$PATH"
-if command -v rustup &> /dev/null; then
-  echo "rustup is already installed"
-else
-  echo "Installing rustup..."
-  wget -qO - https://sh.rustup.rs | sh -s -- -y
-fi
-
-if ! rustup show active-toolchain &> /dev/null; then
-  echo "Selecting the stable Rust toolchain..."
-  rustup default stable
-fi
-
-rustup target add aarch64-unknown-linux-ohos
-cargo install cargo-c --features=vendored-openssl
+ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+command -v rustup >/dev/null || {
+  echo "Install rustup before building; the GitHub runner already provides it." >&2
+  exit 1
+}
+rust_version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tools"]["rust"])' "$ROOT_DIR/reproducibility/source-lock.json")
+cargo_c_version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["tools"]["cargo_c"])' "$ROOT_DIR/reproducibility/source-lock.json")
+rustup toolchain install "$rust_version" --profile minimal --target aarch64-unknown-linux-ohos
+cargo +"$rust_version" install cargo-c --version "$cargo_c_version" --locked --features=vendored-openssl
