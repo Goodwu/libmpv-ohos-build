@@ -5,6 +5,7 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import fetch_sources
 
@@ -74,6 +75,58 @@ class LockedFetchTests(unittest.TestCase):
                 "url": "https://example.invalid/source.tar.gz",
             }, root)
             self.assertEqual((root / "lua/identity.txt").read_text(), "locked")
+
+    def test_shallow_shaderc_dependency_fetch_uses_pinned_commit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            origin = root / "origin"
+            subprocess.run(["git", "init", "--quiet", str(origin)], check=True)
+            file = origin / "identity.txt"
+            file.write_text("pinned")
+            subprocess.run(["git", "-C", str(origin), "add", "."], check=True)
+            commit = ["git", "-C", str(origin), "-c", "user.name=Fixture",
+                      "-c", "user.email=fixture@example.invalid",
+                      "commit", "--quiet", "-m", "fixture"]
+            subprocess.run(commit, check=True)
+            pinned = subprocess.check_output(
+                ["git", "-C", str(origin), "rev-parse", "HEAD"], text=True).strip()
+            file.write_text("unreviewed newer source")
+            subprocess.run(["git", "-C", str(origin), "add", "."], check=True)
+            subprocess.run(commit, check=True)
+            destination = root / "third_party/glslang"
+            fetch_sources.fetch_pinned_shaderc_git(str(origin), pinned, destination)
+            self.assertEqual((destination / "identity.txt").read_text(), "pinned")
+            self.assertEqual(subprocess.check_output(
+                ["git", "-C", str(destination), "rev-parse", "HEAD"],
+                text=True).strip(), pinned)
+
+    def test_failed_shaderc_fetch_does_not_leave_partial_checkout(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "third_party/glslang"
+            with patch.object(fetch_sources.time, "sleep"):
+                with self.assertRaisesRegex(RuntimeError, "after 2 attempts"):
+                    fetch_sources.fetch_pinned_shaderc_git(
+                        str(Path(temporary) / "not-a-repo"), "a" * 40,
+                        path, attempts=2)
+            self.assertFalse(path.exists())
+            self.assertEqual(list(path.parent.glob(".shaderc-dep-*")), [])
+
+    def test_shaderc_deps_rejects_moving_refs_and_path_escape(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "utils").mkdir()
+            (root / "DEPS").write_text("trusted pinned fixture")
+            parser = root / "utils/git-sync-deps"
+            parser.write_text("def parse_file_to_dict(path):\n"
+                              "    return {'deps': {'third_party/glslang': "
+                              "'https://github.com/KhronosGroup/glslang.git@main'}}\n")
+            with self.assertRaisesRegex(ValueError, "full commit SHA"):
+                fetch_sources.shaderc_deps(root)
+            parser.write_text("def parse_file_to_dict(path):\n"
+                              "    return {'deps': {'../glslang': "
+                              "'https://github.com/KhronosGroup/glslang.git@" + "a" * 40 + "'}}\n")
+            with self.assertRaisesRegex(ValueError, "Unsafe shaderc dependency"):
+                fetch_sources.shaderc_deps(root)
 
 
 if __name__ == "__main__":

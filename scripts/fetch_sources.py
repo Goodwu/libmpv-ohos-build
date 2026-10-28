@@ -12,10 +12,12 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import runpy
 import shutil
 import subprocess
 import tarfile
 import tempfile
+import time
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -85,6 +87,75 @@ def fetch_archive(dependency: dict, destination: Path) -> None:
         children[0].rename(target)
 
 
+def shaderc_deps(checkout: Path) -> list[tuple[Path, str, str]]:
+    """Read the *pinned* shaderc DEPS; reject paths or moving refs.
+
+    shaderc's git-sync-deps starts clone threads whose exceptions do not
+    propagate to the process exit code. Do not trust that tool as a CI gate.
+    """
+    parser = runpy.run_path(str(checkout / "utils/git-sync-deps"))["parse_file_to_dict"]
+    data = parser(str(checkout / "DEPS"))
+    if (not isinstance(data.get("deps"), dict) or not data["deps"]
+            or data.get("recursedeps") or data.get("deps_os")):
+        raise ValueError("Unexpected shaderc DEPS format: requires review")
+    selected = []
+    for relative, origin in sorted(data["deps"].items()):
+        path = Path(relative)
+        if (path.is_absolute() or ".." in path.parts
+                or not path.parts or path.parts[0] != "third_party"
+                or len(path.parts) != 2 or not isinstance(origin, str)
+                or "@" not in origin):
+            raise ValueError("Unsafe shaderc dependency path or ref: " + str(relative))
+        url, commit = origin.rsplit("@", 1)
+        if not url.startswith("https://github.com/") or not re.fullmatch(r"[0-9a-f]{40}", commit):
+            raise ValueError("shaderc DEPS requires HTTPS GitHub and full commit SHA")
+        selected.append((path, url, commit))
+    return selected
+
+
+def fetch_pinned_shaderc_git(url: str, commit: str, target: Path,
+                             attempts: int = 3) -> None:
+    """Fetch one pinned shaderc dependency with bounded network retries.
+
+    Stage each attempt in a temporary directory, then publish only after
+    checking the exact commit. Failed attempts cannot leave a partial tree.
+    """
+    if attempts < 1 or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("Invalid pinned shaderc commit or retry count")
+    if target.exists() or target.is_symlink():
+        raise ValueError("Refusing to overwrite existing shaderc dependency: " + str(target))
+    target.parent.mkdir(parents=True, exist_ok=True)
+    for attempt in range(attempts):
+        try:
+            with tempfile.TemporaryDirectory(prefix=".shaderc-dep-", dir=target.parent) as temporary:
+                checkout = Path(temporary) / "source"
+                run("git", "init", "--quiet", str(checkout))
+                run("git", "remote", "add", "origin", url, cwd=checkout)
+                run("git", "fetch", "--quiet", "--no-tags", "--depth=1", "origin", commit, cwd=checkout)
+                run("git", "-c", "advice.detachedHead=false", "checkout",
+                    "--quiet", "--detach", "FETCH_HEAD", cwd=checkout)
+                head = subprocess.check_output(
+                    ["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+                if head != commit:
+                    raise ValueError("Shaderc dependency fetched the wrong commit")
+                checkout.rename(target)
+                return
+        except subprocess.CalledProcessError as error:
+            if attempt + 1 == attempts:
+                raise RuntimeError(
+                    f"Failed to fetch pinned shaderc dependency {target.name} "
+                    f"at {commit} after {attempts} attempts") from error
+            print(f"Retrying shaderc dependency {target.name} "
+                  f"({attempt + 1}/{attempts}) after Git failure", flush=True)
+            time.sleep(attempt + 1)
+
+
+def sync_shaderc_deps(checkout: Path) -> None:
+    for relative, url, commit in shaderc_deps(checkout):
+        print(f"Fetching locked shaderc dependency: {relative} @ {commit}", flush=True)
+        fetch_pinned_shaderc_git(url, commit, checkout / relative)
+
+
 def fetch_git(dependency: dict, destination: Path) -> None:
     target = destination / dependency["name"]
     with tempfile.TemporaryDirectory(dir=destination) as temporary:
@@ -100,7 +171,7 @@ def fetch_git(dependency: dict, destination: Path) -> None:
             run("git", "submodule", "update", "--init", "--recursive", cwd=checkout)
         if dependency["name"] == "shaderc":
             # The script and its DEPS revisions belong to the locked shaderc commit.
-            run("python3", "utils/git-sync-deps", cwd=checkout)
+            sync_shaderc_deps(checkout)
         checkout.rename(target)
 
 
